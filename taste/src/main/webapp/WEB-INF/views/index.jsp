@@ -32,6 +32,40 @@
         .anotherBtn {
             display : none;
         }
+        #container {
+            width : 500px;
+            height : 600px;
+            border : 1px solid black;
+            border-radius : 15px;
+            display : none;
+            position : absolute;
+            top : 50%;
+            left : 50%;
+            transform : translate(-50%, -50%);
+            overflow-y : scroll;
+        }
+        .deTailList {
+            list-style-type: none;
+            display : inline-block;
+            border : 1px solid black;
+            border-radius: 6px;
+            margin-bottom : 10px;
+            padding : 5px;
+
+        }
+        #detailDesc {
+            max-width: 400px;
+        }
+        #containerClose {
+            margin-top : 6px;
+            margin-left : 6px
+        }
+        #nextBtnBlock{
+            text-align : center;
+            display : inline-block;
+            margin-left : 50%;
+            transform: translate(-50%);
+        }
     </style>
 </head>
 <body>
@@ -44,55 +78,110 @@
         <tbody id = "list">
         </tbody>
     </table>
+    <input type = "text" name = "title" value = "" placeholder="정확한 상호명을 입력해주세요">
+    <input type = "button" name = "titleSearch" value = "검색"> <br>
     <span id = "btn">
         <button id = "backBtn" class = "anotherBtn">&lt</button>
         <span id = "btnBlock"></span>
         <button id = "frontBtn" class = "anotherBtn">&gt</button>
-    </span>    
+    </span>
 
+    <div id = container>
+        <div><button id = "containerClose">X</button></div>
+        <ul>
+            <li class = deTailList id = "detailTitle">상호명 : </li>
+            <li class = deTailList id = "detailAddress">주소 : </li>
+            <li class = deTailList id = "detailTel">TEL : </li>
+            <li class = deTailList id = "detailTime">영업 시간 : </li>
+            <li class = deTailList id = "detailDesc">DESCRIPTION : </li>
+            <li class = deTailList><img id = "detailImage" width = 300 height = 250></li>
+        </ul>
+        <div id = "nextBtnBlock"></div>
+    </div>
     
 
 </body>
 <script>
+    let total;
     let pageNo = 1;
     let numOfRows = 300;
-    let key = "";
+    let API_KEY = '<%= System.getenv("APIKEY") %>'; // .env파일의 변수명을 사용하여야 함.
     const url = 'http://apis.data.go.kr/6260000/FoodService/getFoodKr';
     let queryParams;
     let maxPage;
 
     let updateParams = (page) => {
-        queryParams = '?serviceKey=' + key; /*Service Key*/
-        queryParams += '&pageNo=' + page; /**/
-        queryParams += '&numOfRows=' + numOfRows; /**/
-        queryParams += '&resultType=json'; /**/
+        queryParams = '?serviceKey=' + API_KEY;
+        queryParams += '&pageNo=' + page;
+        queryParams += '&numOfRows=' + numOfRows;
+        queryParams += '&resultType=json';
     }
     updateParams(pageNo);
     
+
+
     let getDataList = () => {
-        let result;
+        
         $.ajax({
             url : url + queryParams,
             method : "GET",
             async : false,
             dataType : "json",
             success : (data) => {
-                console.log(data.getFoodKr.item.length);
                 getData(data);
-                result = data;
+                total = data;
             },
             error : (error) => {
                 alert("fail");
             }
         });
-        return result;
+        return total;
     };
+
+    let openDetail = (detail) => {
+        $("#nextBtnBlock").empty();
+        showDetail(detail[0])
+        
+        for(let i = 0; i < detail.length; i++){
+            $("#nextBtnBlock").append("<button class = nextBtn>" + (i + 1) + "</button>");
+        }
+        $("#container").css("display", "inline-block");
+
+        $("#nextBtnBlock").click( (event) => {
+            if(event.target.className == "nextBtn"){
+                showDetail(detail[event.target.textContent - 1]);
+            }
+        }) 
+    }
+
+    let showDetail = (data) => {
+        console.log(data);
+        $("#detailTitle").text("상호명 : " + data.MAIN_TITLE);
+        $("#detailAddress").text("주소 : " + data.ADDR1);
+        $("#detailTel").text("TEL : " + data.CNTCT_TEL);
+        $("#detailTime").text("영업 시간 : " + data.USAGE_DAY_WEEK_AND_TIME);
+        $("#detailDesc").text("DESCRIPTION" + data.ITEMCNTNTS);
+        $("#detailImage").attr("src", data.MAIN_IMG_THUMB);
+    }
+
+
+    
 
     $("#list").click( (event) => {
         if(event.target.className == "dataTitle"){
-            alert(event.target.nextElementSibling.nextElementSibling.textContent);
+            let no = event.target.nextElementSibling.nextElementSibling.textContent
+            let detail = total.getFoodKr.item.filter( (e) => {
+                return e.UC_SEQ == no;
+            });
+            openDetail(detail);
         }
     });
+
+    $("#containerClose").click( () => {
+        $("#container").css("display", "none");
+    })
+
+    
 
     let getData = (data) => {
         $("#list").empty();
@@ -101,7 +190,7 @@
                 break;
             }
             $("#list").append(`<tr><td class = dataTitle>` + data.getFoodKr.item[i].MAIN_TITLE + `</td>
-                            <td><img src =` + data.getFoodKr.item[i].MAIN_IMG_THUMB + ` width = 100 height = 80></td>
+                            <td><img src =` + data.getFoodKr.item[i].MAIN_IMG_THUMB + ` width = 100 height = 75></td>
                             <td class = no>` + data.getFoodKr.item[i].UC_SEQ + `</td></tr>`);
         };
     };
@@ -110,8 +199,6 @@
 
     };
 
-    
-    
     $("#btn").click( (event) => {
         if(event.target.className == "btnNo"){
             let selectNo = event.target.textContent;
@@ -155,5 +242,17 @@
         $("#frontBtn").css("display", "inline-block");
     };
     initData();
+
+    $("input[name=titleSearch]").click( () => {
+        let searchData = total.getFoodKr.item.filter( (e) => {
+            return e.MAIN_TITLE.includes($("input[name=title]").val());
+        });
+        if(searchData == "" || $("input[name=title]").val() == ""){
+            alert("찾으시는 가게가 없습니다.");
+            return;
+        }
+        $("input[name=title]").val("");
+        openDetail(searchData);
+    });
 </script>
 </html>
