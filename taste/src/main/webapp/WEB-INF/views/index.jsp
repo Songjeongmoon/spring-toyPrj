@@ -42,29 +42,52 @@
             top : 50%;
             left : 50%;
             transform : translate(-50%, -50%);
-            overflow-y : scroll;
+            overflow : auto;
         }
-        .deTailList {
+        .detailList {
             list-style-type: none;
             display : inline-block;
-            border : 1px solid black;
             border-radius: 6px;
             margin-bottom : 10px;
             padding : 5px;
-
+            background-color : rgba(0, 102, 255, 0.48);
+            border : 1px solid black;
         }
         #detailDesc {
             max-width: 400px;
         }
         #containerClose {
+            text-align: center;
+            width : 20px;
+            height : 20px;
             margin-top : 6px;
-            margin-left : 6px
+            margin-left : 6px;
+            border-radius : 50%;
+            border : none;
+            background-color : red;
+            font-size: 6px;
+            transition-duration : 0.2s;
+        }
+        #containerClose:hover {
+            font-size : 12px;
+            font-weight : bolder;
+            
         }
         #nextBtnBlock{
             text-align : center;
             display : inline-block;
             margin-left : 50%;
             transform: translate(-50%);
+        }
+        .nextBtn {
+            margin-right : 1px;
+            color : white;
+            background-color : black;
+            border-radius : 3px;
+        }
+        #detailImg {
+            background-color : transparent;
+            border : none;
         }
     </style>
 </head>
@@ -89,12 +112,12 @@
     <div id = container>
         <div><button id = "containerClose">X</button></div>
         <ul>
-            <li class = deTailList id = "detailTitle">상호명 : </li>
-            <li class = deTailList id = "detailAddress">주소 : </li>
-            <li class = deTailList id = "detailTel">TEL : </li>
-            <li class = deTailList id = "detailTime">영업 시간 : </li>
-            <li class = deTailList id = "detailDesc">DESCRIPTION : </li>
-            <li class = deTailList><img id = "detailImage" width = 300 height = 250></li>
+            <li class = detailList id = "detailTitle">상호명 : </li>
+            <li class = detailList id = "detailAddress">주소 : </li>
+            <li class = detailList id = "detailTel">TEL : </li>
+            <li class = detailList id = "detailTime">영업 시간 : </li>
+            <li class = detailList id = "detailDesc">DESCRIPTION : </li>
+            <li class = detailList id = "detailImg"><img id = "detailImage" width = 300 height = 250></li>
         </ul>
         <div id = "nextBtnBlock"></div>
     </div>
@@ -140,11 +163,12 @@
 
     let openDetail = (detail) => {
         $("#nextBtnBlock").empty();
-        showDetail(detail[0])
+        showDetail(detail[0]);
         
         for(let i = 0; i < detail.length; i++){
             $("#nextBtnBlock").append("<button class = nextBtn>" + (i + 1) + "</button>");
         }
+
         $("#container").css("display", "inline-block");
 
         $("#nextBtnBlock").click( (event) => {
@@ -155,7 +179,6 @@
     }
 
     let showDetail = (data) => {
-        console.log(data);
         $("#detailTitle").text("상호명 : " + data.MAIN_TITLE);
         $("#detailAddress").text("주소 : " + data.ADDR1);
         $("#detailTel").text("TEL : " + data.CNTCT_TEL);
